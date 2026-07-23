@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Reports</h2>
+  <p class="muted">Reports use your browser timezone: {{ timezone_name }}.</p>
+  <form method="get" class="filters">
+    <div>
+      <label>Date Range</label>
+      <select name="range" onchange="this.form.submit()">
+        <option value="today" {% if selected_range=='today' %}selected{% endif %}>Today</option>
+        <option value="yesterday" {% if selected_range=='yesterday' %}selected{% endif %}>Yesterday</option>
+        <option value="7" {% if selected_range=='7' %}selected{% endif %}>Previous 7 Days</option>
+        <option value="30" {% if selected_range=='30' %}selected{% endif %}>Previous 30 Days</option>
+        <option value="custom" {% if selected_range=='custom' %}selected{% endif %}>Custom Range</option>
+      </select>
+    </div>
+    <div>
+      <label>Start Date</label>
+      <input type="date" name="start_date" value="{{ start_date }}">
+    </div>
+    <div>
+      <label>End Date</label>
+      <input type="date" name="end_date" value="{{ end_date }}">
+    </div>
+    <div>
+      <label>Character</label>
+      <select name="character_id">
+        <option value="">All Characters</option>
+        {% for c in characters %}
+          <option value="{{ c.character_id }}" {% if selected_character_id|string == c.character_id|string %}selected{% endif %}>{{ c.character_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Activity</label>
+      <select name="activity">
+        {% for a in ['All','Ratting','Incursions','Missions'] %}
+          <option value="{{ a }}" {% if selected_activity == a %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div><label>&nbsp;</label><button>Apply</button></div>
+  </form>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="muted">Wallet Income</div><div class="metric">{{ total_wallet|isk }}</div></div>
+  <div class="card"><div class="muted">Loot Value</div><div class="metric">{{ total_loot|isk }}</div></div>
+  <div class="card"><div class="muted">Total Value</div><div class="metric">{{ total_value|isk }}</div></div>
+  <div class="card"><div class="muted">ISK / Hour</div><div class="metric">{{ isk_hour|isk }}</div></div>
+</div>
+
+<div class="card">
+  <h3>CSV Exports</h3>
+  <p>
+    <a class="button" href="/reports/export?{{ qs('sessions') }}">Export Sessions CSV</a>
+    <a class="button" href="/reports/export?{{ qs('characters') }}">Export Character CSV</a>
+    <a class="button" href="/reports/export?{{ qs('activity') }}">Export Activity CSV</a>
+    <a class="button" href="/reports/export?{{ qs('raw_wallet') }}">Export Raw Wallet CSV</a>
+    <a class="button" href="/reports/export?{{ qs('loot') }}">Export Loot CSV</a>
+  </p>
+</div>
+
+<div class="card">
+  <h3>Activity Report</h3>
+  <table>
+    <tr><th>Activity</th><th>Sessions</th><th>Wallet</th><th>Loot</th><th>Total</th><th>Hours</th><th>ISK/Hour</th></tr>
+    {% for r in activity_rows %}
+      <tr><td>{{ r.activity }}</td><td>{{ r.sessions }}</td><td>{{ r.wallet|isk }}</td><td>{{ r.loot|isk }}</td><td>{{ r.total|isk }}</td><td>{{ '%.2f'|format(r.hours) }}</td><td>{{ (r.total / r.hours if r.hours else 0)|isk }}</td></tr>
+    {% else %}<tr><td colspan="7">No activity found for this filter.</td></tr>{% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h3>Character Contribution Report</h3>
+  <table>
+    <tr><th>Character</th><th>Sessions</th><th>Wallet</th><th>Loot</th><th>Total</th><th>Ratting</th><th>Incursions</th><th>Missions</th><th>Hours</th><th>ISK/Hour</th></tr>
+    {% for r in character_rows %}
+      <tr><td>{{ r.character }}</td><td>{{ r.sessions }}</td><td>{{ r.wallet|isk }}</td><td>{{ r.loot|isk }}</td><td>{{ r.total|isk }}</td><td>{{ r.Ratting|isk }}</td><td>{{ r.Incursions|isk }}</td><td>{{ r.Missions|isk }}</td><td>{{ '%.2f'|format(r.hours) }}</td><td>{{ (r.total / r.hours if r.hours else 0)|isk }}</td></tr>
+    {% else %}<tr><td colspan="10">No character income found for this filter.</td></tr>{% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h3>Session Report</h3>
+  <table>
+    <tr><th>Session</th><th>Character</th><th>Activity</th><th>Start</th><th>End</th><th>Wallet</th><th>Loot</th><th>Total</th></tr>
+    {% for s in sessions %}
+      <tr><td><a href="/sessions/{{ s.id }}">#{{ s.id }}</a></td><td>{{ character_map.get(s.source_character_id, s.source_character_id) }}</td><td>{{ s.activity_type }}</td><td>{{ s.start_time|localtime(timezone_name) }}</td><td>{{ s.end_time|localtime(timezone_name) }}</td><td>{{ s.wallet_income|isk }}</td><td>{{ s.loot_value|isk }}</td><td>{{ s.total_value|isk }}</td></tr>
+    {% else %}<tr><td colspan="8">No sessions found for this filter.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

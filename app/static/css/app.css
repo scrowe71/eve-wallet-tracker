@@ -1,0 +1,64 @@
+body{font-family:Arial,sans-serif;margin:0;background:#0f1720;color:#e7eef8}header{background:#111827;padding:16px 24px;border-bottom:1px solid #243244}h1{margin:0 0 10px 0;font-size:24px}nav a{color:#b7d3ff;margin-right:16px;text-decoration:none}main{padding:24px}.card{background:#162232;border:1px solid #2a3a51;border-radius:10px;padding:18px;margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}.metric{font-size:28px;font-weight:bold;margin-top:8px}.muted{color:#9fb0c5}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #2a3a51;text-align:left;padding:10px}button,.button{background:#2563eb;color:white;border:0;border-radius:8px;padding:10px 14px;text-decoration:none;display:inline-block;cursor:pointer}button:disabled{background:#4b5563;cursor:not-allowed}input,select{padding:8px;border-radius:6px;border:1px solid #40516a;background:#0f1720;color:#e7eef8}.success{background:#064e3b}.warning{background:#713f12}.error{background:#7f1d1d}label{display:block;margin-top:8px;margin-bottom:4px}
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; align-items: end; }
+.filters label { font-size: 0.85rem; color: #8a8f98; }
+.filters input, .filters select { padding: 0.45rem; }
+.number { text-align: right; white-space: nowrap; }
+.pagination { margin-top: 1rem; display: flex; gap: 1rem; align-items: center; }
+.button { display: inline-block; padding: 0.45rem 0.7rem; border: 1px solid #444; border-radius: 6px; text-decoration: none; }
+
+/* Date input fix: make native date controls light so the browser's black calendar icon is visible */
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="time"] {
+    background-color: #f8fafc !important;
+    color: #0f1720 !important;
+    border: 1px solid #93c5fd !important;
+    color-scheme: light !important;
+}
+
+/* Chrome / Edge / Safari */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    opacity: 1 !important;
+    cursor: pointer;
+    filter: none !important;
+}
+
+/* Improve placeholder/date format contrast */
+input[type="date"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit,
+input[type="month"]::-webkit-datetime-edit,
+input[type="week"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit {
+    color: #0f1720 !important;
+}
+
+/* Auto Sync control */
+.auto-sync-widget {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+    padding: 0.25rem 0.45rem;
+    border: 1px solid #2a3a51;
+    border-radius: 8px;
+    background: #0f1720;
+}
+.auto-sync-toggle {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.85rem;
+    background: #4b5563;
+}
+.auto-sync-toggle.enabled {
+    background: #047857;
+}
+.auto-sync-status {
+    font-size: 0.85rem;
+    white-space: nowrap;
+}

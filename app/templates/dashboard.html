@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Dashboard</h2>
+  <p class="muted">Date ranges are evaluated in your browser timezone: {{ timezone_name }}.</p>
+  <form method="get" class="filters">
+    <div>
+      <label>Date Range</label>
+      <select name="range">
+        <option value="today" {% if selected_range=='today' %}selected{% endif %}>Today</option>
+        <option value="yesterday" {% if selected_range=='yesterday' %}selected{% endif %}>Yesterday</option>
+        <option value="7" {% if selected_range=='7' %}selected{% endif %}>Previous 7 Days</option>
+        <option value="30" {% if selected_range=='30' %}selected{% endif %}>Previous 30 Days</option>
+        <option value="custom" {% if selected_range=='custom' %}selected{% endif %}>Custom Range</option>
+      </select>
+    </div>
+    <div>
+      <label>Start Date</label>
+      <input type="date" name="start_date" value="{{ start_date }}">
+    </div>
+    <div>
+      <label>End Date</label>
+      <input type="date" name="end_date" value="{{ end_date }}">
+    </div>
+    <div><label>&nbsp;</label><button>Apply</button></div>
+  </form>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="muted">Wallet Income</div><div class="metric">{{ wallet|isk }}</div></div>
+  <div class="card"><div class="muted">Loot Value</div><div class="metric">{{ loot|isk }}</div></div>
+  <div class="card"><div class="muted">Total Value</div><div class="metric">{{ total|isk }}</div></div>
+  <div class="card"><div class="muted">ISK / Hour</div><div class="metric">{{ isk_hour|isk }}</div></div>
+  <div class="card"><div class="muted">Sessions</div><div class="metric">{{ session_count }}</div></div>
+</div>
+
+<div class="card">
+  <h3>Income by Activity</h3>
+  <table>
+    <tr><th>Activity</th><th>Total</th></tr>
+    {% for k,v in by_activity.items() %}
+      <tr><td>{{ k }}</td><td>{{ v|isk }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h3>Character Contribution</h3>
+  <p class="muted">Characters with income in the selected date range, sorted by total contribution.</p>
+  <table>
+    <tr><th>Character</th><th>Total</th><th>Ratting</th><th>Incursions</th><th>Missions</th><th>Loot Value</th></tr>
+    {% if character_contributions %}
+      {% for row in character_contributions %}
+        <tr>
+          <td>{{ row.character }}</td>
+          <td>{{ row.total|isk }}</td>
+          <td>{{ row.Ratting|isk }}</td>
+          <td>{{ row.Incursions|isk }}</td>
+          <td>{{ row.Missions|isk }}</td>
+          <td>{{ row["Loot Value"]|isk }}</td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="6" class="muted">No character income found for this date range.</td></tr>
+    {% endif %}
+  </table>
+</div>
+{% endblock %}
