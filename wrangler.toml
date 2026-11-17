@@ -13,13 +13,13 @@ routes = [
 [assets]
 directory = "./public"
 
-# The database (was /opt/evewallet/data/evewallet.db). Create it once with:
+# The database (was /opt/evewallet/data/evewallet.db), created with:
 #   npx wrangler d1 create evewallet
-# then put the database_id it prints below.
+
 [[d1_databases]]
 binding = "DB"
 database_name = "evewallet"
-database_id = "REPLACE_WITH_DATABASE_ID"
+database_id = "61118646-7fbd-49bc-bba9-9dda4a7dce95"
 migrations_dir = "migrations"
 
 [vars]
