@@ -1,0 +1,41 @@
+name = "evewallet"
+main = "src/index.js"
+compatibility_date = "2025-09-30"
+workers_dev = false
+
+# Serve at evewallet.crankyape.space. Cloudflare creates the DNS record and certificate on deploy.
+# The old DigitalOcean A record for evewallet must be deleted first (see README).
+routes = [
+  { pattern = "evewallet.crankyape.space", custom_domain = true }
+]
+
+# The stylesheet in public/static is served directly by Cloudflare.
+[assets]
+directory = "./public"
+
+# The database (was /opt/evewallet/data/evewallet.db). Create it once with:
+#   npx wrangler d1 create evewallet
+# then put the database_id it prints below.
+[[d1_databases]]
+binding = "DB"
+database_name = "evewallet"
+database_id = "REPLACE_WITH_DATABASE_ID"
+migrations_dir = "migrations"
+
+[vars]
+APP_NAME = "EVE Wallet Tracker"
+# From https://developers.eveonline.com/applications, the existing EVE Wallet Tracker application.
+# The Client ID is public (it is sent in the login URL), so it is fine to commit.
+EVE_CLIENT_ID = "fc73bbec424d4552b848e2d15def367c"
+EVE_CALLBACK_URL = "https://evewallet.crankyape.space/auth/callback"
+SESSION_TIMEOUT_HOURS = "3"
+ESI_SYNC_COOLDOWN_MINUTES = "60"
+DEFAULT_LOOT_PRICE_SOURCE = "Jita Buy"
+DEFAULT_LOOT_PERCENTAGE = "95"
+# Secrets (set in the dashboard under Settings -> Variables and Secrets, not here):
+#   EVE_CLIENT_SECRET  - the application's secret key
+#   SECRET_KEY         - any long random string; signs the login cookie
+#   JANICE_API_KEY     - for "Janice Buy" loot pricing
+
+[observability]
+enabled = true

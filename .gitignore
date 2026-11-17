@@ -1,39 +1,27 @@
-# Python cache
-__pycache__/
-*.py[cod]
-*$py.class
+# Cloudflare / Node
+.wrangler/
+node_modules/
+.dev.vars
+.dev.vars.*
 
-# Virtual environments
-.venv/
-venv/
-env/
-
-# Environment variables and secrets
+# Secrets
 .env
 .env.*
-!.env.example
 
-# SQLite databases
+# Database exports (contain ESI refresh tokens)
+d1-data*.sql
 *.db
 *.db-shm
 *.db-wal
 *.sqlite
 *.sqlite3
 
-# App data
-data/
-backups/
-logs/
-*.log
+# Python (scripts/)
+__pycache__/
+*.py[cod]
 
-# Build output
-build/
-dist/
-*.spec
-
-# VS Code
+# Editors / OS
 .vscode/settings.json
-
-# Windows
 Thumbs.db
 Desktop.ini
+.DS_Store

@@ -1,53 +1,53 @@
-# EVE Wallet Tracker - Dashboard Fleet Session Metrics Fix
+# EVE Wallet Tracker
 
-This deployment package updates the Dashboard to use the same fleet-session grouping logic as the Sessions page.
+EVE Online income tracker: ESI wallet sync, sessions (including fleet/multibox grouping), loot valuation, reports and CSV exports.
 
-## Fixes
+Runs on **Cloudflare Workers + D1** at https://evewallet.crankyape.space. It was moved here from the DigitalOcean droplet (FastAPI + SQLite + Nginx/systemd); the Python version is still in this repo's git history. Pages, numbers and behaviour are the same as the Python app.
 
-- Dashboard Sessions count now reflects combined fleet sessions instead of per-character sessions.
-- Dashboard ISK/hour now uses fleet session duration instead of summing each character's duration.
-- Dashboard Wallet, Loot, and Total values remain based on the same underlying character sessions but are summarized using fleet-session groups.
-- This aligns Dashboard metrics with the Sessions page when multiple characters participate in the same smartbombing/multibox session.
+## How it fits together
 
-## Deploy
+| Piece | Where |
+|---|---|
+| Web app (all pages, EVE SSO login, wallet sync, loot pricing) | `src/` — a Cloudflare Worker, plain JavaScript, no build step |
+| Database | D1 database `evewallet` (same tables as the old `evewallet.db`), schema in `migrations/` |
+| Stylesheet | `public/static/css/app.css`, served directly by Cloudflare |
+| Settings | `[vars]` in `wrangler.toml` |
+| Secrets | Worker secrets: `EVE_CLIENT_SECRET`, `SECRET_KEY`, `JANICE_API_KEY` |
 
-Replace:
-- app/
-- requirements.txt
-- README.md
+It uses the same EVE application (client ID and secret) and callback URL as before, so linked characters keep working without logging in again.
 
-Do not replace:
-- .env
-- .env.example
-- data/
-- venv/
+Auto Sync works as before: while a page is open with Auto Sync ON, the browser triggers a wallet sync whenever the 60-minute ESI cooldown allows.
 
-Restart the service after deployment:
+## One-time setup
 
-```bash
-cd /opt/evewallet
-systemctl restart evewallet
-systemctl status evewallet
+Run these in PowerShell. They need Node.js (`node -v`; if missing: `winget install OpenJS.NodeJS.LTS`, then open a new PowerShell window).
+
+```powershell
+cd C:\github
+git clone https://github.com/scrowe71/eve-wallet-tracker
+cd eve-wallet-tracker
+git checkout dev
+npx wrangler login
 ```
 
-No database migration is required.
+1. **Create the database:** `npx wrangler d1 create evewallet`, then put the `database_id` it prints into `wrangler.toml`.
+2. **Create the tables:** `npx wrangler d1 migrations apply evewallet --remote`
+3. **Load the old data** (made from the droplet's `evewallet.db` with `scripts/sqlite_to_d1.py`; it contains refresh tokens, so it is never committed):
+   `npx wrangler d1 execute evewallet --remote --file=C:\github\evewallet\d1-data.sql`
+4. **Free up the hostname:** in the Cloudflare dashboard, crankyape.space → DNS, delete the `evewallet` A record that points at the droplet.
+5. **Deploy:** `npx wrangler deploy`
+6. **Secrets** (read straight from the old `.env`, plus a new random cookie key):
+   ```powershell
+   $envFile = "C:\github\evewallet\.env"
+   function Get-EnvValue($name) { (Select-String -Path $envFile -Pattern "^$name=").Line.Split('=', 2)[1].Trim().Trim('"') }
+   Get-EnvValue EVE_CLIENT_SECRET | npx wrangler secret put EVE_CLIENT_SECRET
+   Get-EnvValue JANICE_API_KEY | npx wrangler secret put JANICE_API_KEY
+   [Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 })) | npx wrangler secret put SECRET_KEY
+   ```
+7. **Automatic deploys:** Workers & Pages → `evewallet` → Settings → Build → connect `scrowe71/eve-wallet-tracker`, production branch `main`. From then on, every push to `main` deploys.
 
+If something goes wrong, re-adding the old A record puts the droplet back in charge.
 
-## Manual loot value
+## Changing the database schema later
 
-The Loot page includes an Add Manual Loot Value form for entering an arbitrary ISK amount directly as loot value. Manual entries use `price_source = Manual ISK`, quantity 1, 100% valuation, and are matched to the current/latest session by character and timestamp.
-
-## Manual Loot Latest Session / Distributed Chart Update
-
-- Manual loot values attach to the latest matching/recent character session instead of staying unassigned.
-- Manual loot values use `Manual ISK` as the source.
-- Manual loot is included in session totals and loot totals.
-- On the session chart, manual loot is distributed across the full effective session time instead of appearing as a single late spike.
-- Normal itemized loot remains timestamped and grouped by batch timestamp.
-
-## Unified loot/session update
-- Manual ISK and itemized loot now use one current-session resolver.
-- Unmatched loot is repaired when the Loot page opens and after session rebuilds.
-- Janice URL imports are removed. Select **Janice Buy** as the price source when pasting itemized loot.
-- Janice uses `POST https://janice.e-351.com/api/rest/v2/pricer?market=2` with the `X-ApiKey` header.
-- Configure `JANICE_API_KEY` in `/opt/evewallet/.env` and restart the `evewallet` service.
+Add a new numbered file to `migrations/` (e.g. `0002_add_notes.sql`) and run `npx wrangler d1 migrations apply evewallet --remote`.
