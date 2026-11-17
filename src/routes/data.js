@@ -272,7 +272,7 @@ async function reportContext(req) {
     a.sessions += 1; a.wallet += wallet; a.loot += loot; a.total += total; a.hours += hours;
 
     const name = characterMapping.get(Number(s.source_character_id)) ?? 'Unknown Character';
-    if (!byCharacter.has(name)) byCharacter.set(name, { character: name, sessions: 0, wallet: 0, loot: 0, total: 0, hours: 0, Ratting: 0, Incursions: 0, Missions: 0 });
+    if (!byCharacter.has(name)) byCharacter.set(name, { character: name, character_id: characterMapping.has(Number(s.source_character_id)) ? Number(s.source_character_id) : null, sessions: 0, wallet: 0, loot: 0, total: 0, hours: 0, Ratting: 0, Incursions: 0, Missions: 0 });
     const c = byCharacter.get(name);
     c.sessions += 1; c.wallet += wallet; c.loot += loot; c.total += total; c.hours += hours;
     if (['Ratting', 'Incursions', 'Missions'].includes(act)) c[act] += wallet;

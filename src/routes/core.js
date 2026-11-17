@@ -52,7 +52,7 @@ export async function dashboard(req) {
     byActivity.set(activity, (byActivity.get(activity) || 0) + walletValue);
     const name = characters.get(Number(s.source_character_id)) ?? 'Unknown Character';
     if (!contributions.has(name)) {
-      contributions.set(name, { character: name, total: 0, Ratting: 0, Incursions: 0, Missions: 0, 'Loot Value': 0 });
+      contributions.set(name, { character: name, character_id: characters.has(Number(s.source_character_id)) ? Number(s.source_character_id) : null, total: 0, Ratting: 0, Incursions: 0, Missions: 0, 'Loot Value': 0 });
     }
     const row = contributions.get(name);
     row.total += Number(s.total_value || 0);

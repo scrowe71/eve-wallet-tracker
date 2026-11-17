@@ -79,6 +79,7 @@ export async function callback(req) {
     }
     session.set('user_id', user.id);
     session.set('user_character_name', user.eve_character_name);
+    session.set('user_character_id', user.eve_character_id);
   }
 
   const expires = tokenExpiresAt(tokens);

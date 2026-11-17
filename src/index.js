@@ -81,9 +81,16 @@ export default {
       return text(String(err.message || err), 500);
     }
 
+    session.path = path;
+
     // Every application page and data route requires an EVE SSO login.
     const userId = session.userId();
     let response;
+    if (userId !== null && !session.get('user_character_id')) {
+      // Sessions from before the redesign don't carry the portrait character; look it up once.
+      const user = await env.DB.prepare('SELECT eve_character_id FROM users WHERE id = ?').bind(userId).first();
+      if (user) session.set('user_character_id', user.eve_character_id);
+    }
     if (!isPublicPath(path) && userId === null) {
       response = request.method === 'GET' || request.method === 'HEAD' ? redirect('/auth/login') : text('Login required', 401);
       return session.commit(response);

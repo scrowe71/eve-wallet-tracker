@@ -109,45 +109,59 @@ const AUTO_SYNC_SCRIPT = raw(`<script>
 })();
 </script>`);
 
+const TABS = [
+  ['/', 'Dashboard'],
+  ['/sessions', 'Sessions'],
+  ['/loot', 'Loot'],
+  ['/reports', 'Reports'],
+  ['/raw-data', 'Raw Data'],
+  ['/sync', 'Wallet Sync'],
+  ['/characters', 'Characters'],
+  ['/settings', 'Settings'],
+  ['/about', 'About'],
+];
+
+function isActive(tab, path) {
+  if (tab === '/') return path === '/';
+  return path === tab || path.startsWith(`${tab}/`);
+}
+
+export const portrait = (characterId, size = 64) =>
+  `https://images.evetech.net/characters/${encodeURIComponent(characterId)}/portrait?size=${size}`;
+
 /**
- * Page shell (was base.html).
+ * Page shell (was base.html), styled like EveAssets.
  * @param {import('../session.js').Session} session
  */
 export function layout(session, content, title = null) {
   const loggedIn = session.userId() !== null;
   const currentTz = session.get('timezone', '');
+  const path = session.path || '/';
+  const charId = session.get('user_character_id');
   return html`<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title || 'EVE Wallet Tracker'}</title>
+  <title>${title || 'EveWallet'}</title>
   <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body>
-<header>
-  <h1>EVE Wallet Tracker</h1>
-  <nav>
-    <a href="/">Dashboard</a>
-    <a href="/characters">Characters</a>
-    <a href="/sync">Wallet Sync</a>
-    <a href="/raw-data">Raw Data</a>
-    <a href="/sessions">Sessions</a>
-    <a href="/loot">Loot</a>
-    <a href="/reports">Reports</a>
-    <a href="/settings">Settings</a>
-    <a href="/about">About</a>
-    ${loggedIn ? html`
-      <span class="muted">Logged in as ${session.get('user_character_name')}</span>
-      <span class="muted">TZ: ${session.get('timezone', 'detecting...')}</span>
-      <span id="auto-sync-widget" class="auto-sync-widget" title="Automatically sync wallet data when the ESI sync cooldown allows it.">
-        <button id="auto-sync-toggle" type="button" class="auto-sync-toggle">Auto Sync: ...</button>
-        <span id="auto-sync-status" class="auto-sync-status muted">Checking...</span>
-      </span>
-      <a href="/auth/logout">Logout</a>` : html`
-      <a class="button" href="/auth/login">Login with EVE</a>`}
-  </nav>
+<header class="topbar">
+  <a class="brand" href="/">Eve<b>Wallet</b></a>
+  ${loggedIn ? html`
+  <span id="auto-sync-widget" class="auto-sync-widget" title="Automatically sync wallet data when the ESI sync cooldown allows it.">
+    <span id="auto-sync-status" class="auto-sync-status">Checking...</span>
+    <button id="auto-sync-toggle" type="button" class="auto-sync-toggle">Auto Sync: ...</button>
+  </span>
+  <span class="who">
+    ${charId ? html`<img src="${portrait(charId, 64)}" alt="" onerror="this.style.visibility='hidden'">` : ''}
+    <span><b>${session.get('user_character_name')}</b><br><span class="tz">${session.get('timezone', 'detecting...')}</span></span>
+  </span>
+  <a class="button" href="/auth/logout">Log out</a>` : html`
+  <a class="button primary" href="/auth/login">Log in with EVE</a>`}
 </header>
+${loggedIn ? html`<nav class="tabs">${TABS.map(([href, label]) => html`<a href="${href}"${isActive(href, path) ? html` class="on"` : ''}>${label}</a>`)}</nav>` : ''}
 <main>${content}</main>
 <script>
 (function () {

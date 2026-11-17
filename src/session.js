@@ -44,6 +44,7 @@ export class Session {
     this.data = data || {};
     this.secret = secret;
     this.dirty = false;
+    this.path = '/'; // current request path, for the active tab (not stored)
   }
 
   static async load(request, secret) {
