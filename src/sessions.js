@@ -7,7 +7,7 @@
 import { settings } from './config.js';
 import { all, OWNED } from './db.js';
 import { classifyWalletEntry } from './esi.js';
-import { parseDb, tzOffsetMs, safeTz, nowDb } from './time.js';
+import { parseDb, tzOffsetMs, safeTz, nowDb, toDb } from './time.js';
 
 export const SUPPORTED_ACTIVITIES = ['Ratting', 'Incursions', 'Missions'];
 
@@ -20,6 +20,14 @@ export const SUPPORTED_ACTIVITIES = ['Ratting', 'Incursions', 'Missions'];
 const END_FROM_ACTIVITY = (sid) => `end_time = MAX(
           COALESCE((SELECT MAX(w.entry_date) FROM wallet_entries w WHERE w.session_id = ${sid}), end_time),
           COALESCE((SELECT MAX(l2.loot_date) FROM loot_entries l2 WHERE l2.session_id = ${sid}), ''))`;
+
+/** A ratting bounty payout covers the 20-minute cycle before it. */
+export const BOUNTY_CYCLE_MS = 20 * 60 * 1000;
+const isBountyRow = (e) => {
+  const ref = String(e.ref_type || '').toLowerCase();
+  const desc = String(e.description || '').toLowerCase();
+  return ref === 'bounty_prizes' || desc.includes('bounty prizes');
+};
 
 /** Statement: recompute one session's loot_value and total_value from its loot rows. */
 export function recalcSessionLootStmt(db, sessionId) {
@@ -173,7 +181,10 @@ export async function rebuildSessions(env, userId, timezoneName = 'UTC') {
       if (e._ms > end._ms) end = e;
       income += Number(e.amount || 0);
     }
-    newSessions.push({ c: Number(characterId), a: activity, s: start.entry_date, e: end.entry_date, w: income });
+    // Ratting sessions start one bounty cycle (20 minutes) before the first bounty payout,
+    // because that payout is for the ratting done in those 20 minutes.
+    const startAt = activity === 'Ratting' && isBountyRow(start) ? toDb(start._ms - BOUNTY_CYCLE_MS) : start.entry_date;
+    newSessions.push({ c: Number(characterId), a: activity, s: startAt, e: end.entry_date, w: income });
   };
   for (const [key, list] of byKey) {
     const [characterId, activity] = key.split('|');
