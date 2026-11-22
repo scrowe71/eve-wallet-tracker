@@ -123,10 +123,9 @@ export function buildSessionChart(session, walletEntries, lootEntries) {
 
   // X-axis position: ratting bounties count 20-minute cycles; ESS rows use the
   // latest bounty cycle plus their payout offset; everything else uses real time.
-  // Nothing is placed past the session's real length: loot logged after the
-  // session ended was still earned during it, and extra bounty ticks can't add
-  // time that didn't happen. That keeps the chart's last point equal to the
-  // session's ISK/hour (total / duration).
+  // Nothing is placed past the session's end (its last wallet or loot entry), so
+  // extra bounty cycles can't add time that didn't happen and the chart's last
+  // point equals the session's ISK/hour (total / duration).
   const sessionMinutes = sessionStart !== null && sessionEnd !== null && sessionEnd > sessionStart
     ? (sessionEnd - sessionStart) / 60000 : null;
   const capMinutes = (m) => (sessionMinutes ? Math.min(m, sessionMinutes) : m);

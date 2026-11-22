@@ -11,12 +11,23 @@ import { parseDb, tzOffsetMs, safeTz, nowDb } from './time.js';
 
 export const SUPPORTED_ACTIVITIES = ['Ratting', 'Incursions', 'Missions'];
 
+/**
+ * A session ends at its last wallet entry or its last loot entry, whichever is later.
+ * ESI's wallet journal lags behind the game, so loot logged while still ratting
+ * (and attached to this session) is often the newest sign of activity.
+ * Recomputed from the rows each time, so deleting loot shrinks it back.
+ */
+const END_FROM_ACTIVITY = (sid) => `end_time = MAX(
+          COALESCE((SELECT MAX(w.entry_date) FROM wallet_entries w WHERE w.session_id = ${sid}), end_time),
+          COALESCE((SELECT MAX(l2.loot_date) FROM loot_entries l2 WHERE l2.session_id = ${sid}), ''))`;
+
 /** Statement: recompute one session's loot_value and total_value from its loot rows. */
 export function recalcSessionLootStmt(db, sessionId) {
   return db.prepare(`
     UPDATE sessions
     SET loot_value = (SELECT COALESCE(SUM(calculated_value), 0) FROM loot_entries WHERE session_id = ?1),
-        total_value = COALESCE(wallet_income, 0) + (SELECT COALESCE(SUM(calculated_value), 0) FROM loot_entries WHERE session_id = ?1)
+        total_value = COALESCE(wallet_income, 0) + (SELECT COALESCE(SUM(calculated_value), 0) FROM loot_entries WHERE session_id = ?1),
+        ${END_FROM_ACTIVITY('?1')}
     WHERE id = ?1`).bind(sessionId);
 }
 
@@ -25,7 +36,8 @@ function recalcAllUserSessionsStmt(db, userId) {
   return db.prepare(`
     UPDATE sessions
     SET loot_value = (SELECT COALESCE(SUM(l.calculated_value), 0) FROM loot_entries l WHERE l.session_id = sessions.id),
-        total_value = COALESCE(wallet_income, 0) + (SELECT COALESCE(SUM(l.calculated_value), 0) FROM loot_entries l WHERE l.session_id = sessions.id)
+        total_value = COALESCE(wallet_income, 0) + (SELECT COALESCE(SUM(l.calculated_value), 0) FROM loot_entries l WHERE l.session_id = sessions.id),
+        ${END_FROM_ACTIVITY('sessions.id')}
     WHERE ${OWNED('source_character_id')}`).bind(userId);
 }
 
