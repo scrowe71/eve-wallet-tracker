@@ -123,6 +123,13 @@ export function buildSessionChart(session, walletEntries, lootEntries) {
 
   // X-axis position: ratting bounties count 20-minute cycles; ESS rows use the
   // latest bounty cycle plus their payout offset; everything else uses real time.
+  // Nothing is placed past the session's real length: loot logged after the
+  // session ended was still earned during it, and extra bounty ticks can't add
+  // time that didn't happen. That keeps the chart's last point equal to the
+  // session's ISK/hour (total / duration).
+  const sessionMinutes = sessionStart !== null && sessionEnd !== null && sessionEnd > sessionStart
+    ? (sessionEnd - sessionStart) / 60000 : null;
+  const capMinutes = (m) => (sessionMinutes ? Math.min(m, sessionMinutes) : m);
   const timed = [];
   let cycles = 0;
   let latestCycleMinutes = 0;
@@ -144,6 +151,7 @@ export function buildSessionChart(session, walletEntries, lootEntries) {
       effective = Math.max(actualMinutes, 1);
       basis = 'actual elapsed session time';
     }
+    effective = capMinutes(effective);
     timed.push({
       ...ev, seq,
       elapsed_minutes: effective,
@@ -156,7 +164,8 @@ export function buildSessionChart(session, walletEntries, lootEntries) {
   timed.sort((a, b) => a.elapsed_minutes - b.elapsed_minutes || a.time - b.time || a.seq - b.seq);
 
   const manualTotal = lootEntries.filter(isManualLoot).reduce((sum, e) => sum + Number(e.calculated_value || 0), 0);
-  let maxMinutes = Math.max(timed.length ? Math.max(...timed.map((p) => p.elapsed_minutes)) : 0, 20, 1);
+  let maxMinutes = sessionMinutes
+    ?? Math.max(timed.length ? Math.max(...timed.map((p) => p.elapsed_minutes)) : 0, 20, 1);
 
   // Manual ISK loot is spread linearly across the session instead of spiking at entry time.
   let cumulative = 0;

@@ -350,7 +350,7 @@ ${statCards([
 
 <div class="card">
   <h3>Cumulative ISK / Hour</h3>
-  <p class="muted">Line chart shows cumulative ISK/hour at each wallet or loot data point. X-axis is effective session earning time. Ratting bounty cycles use 20-minute intervals; ESS payouts are plotted as their own points using ratting cycle time plus the payout offset after the latest bounty cycle.</p>
+  <p class="muted">Line chart shows cumulative ISK/hour at each wallet or loot data point. X-axis is effective session earning time. Ratting bounty cycles use 20-minute intervals; ESS payouts are plotted as their own points using ratting cycle time plus the payout offset after the latest bounty cycle. Nothing is placed past the session's end, so loot logged afterwards counts as earned by the end and the last point matches the ISK / hour above.</p>
   ${c.session_chart.svg_points.length ? html`${chartSvg(c.session_chart)}
   <p class="muted">Labels are intentionally limited to prevent clutter. Hover over any point for event details. Ratting bounty points are normalized to 20-minute cycles; ESS payouts include the actual offset after the latest bounty row so they remain separate chart points.</p>` : html`
     <p>No chart data is available for this session.</p>`}
